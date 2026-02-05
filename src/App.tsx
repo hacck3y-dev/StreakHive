@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Utility from './pages/Utility';
 import Chat from './pages/Chat';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UtilityProvider } from './contexts/UtilityContext';
@@ -36,6 +37,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/utility"
+          element={
+            <ProtectedRoute>
+              <Utility />
             </ProtectedRoute>
           }
         />

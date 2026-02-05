@@ -2178,6 +2178,14 @@ const Dashboard = () => {
                 </div>
             </Modal>
 
+            {/* Utility Floating Button */}
+            <button
+                onClick={() => navigate('/utility')}
+                className="fixed bottom-24 right-4 z-40 md:bottom-6 md:right-6 bg-accent-yellow text-bg-primary px-4 py-3 rounded-full shadow-xl font-semibold"
+            >
+                Utility
+            </button>
+
             {/* Chat Modal (if needed for full-screen chat) */}
         </div>
     );
