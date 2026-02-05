@@ -12,6 +12,8 @@ import postsRouter from './routes/posts';
 import chatRouter from './routes/chat';
 import challengesRouter from './routes/challenges';
 import notificationsRouter from './routes/notifications';
+import remindersRouter from './routes/reminders';
+import pomodoroRouter from './routes/pomodoro';
 
 dotenv.config();
 
@@ -36,6 +38,8 @@ app.use('/api/posts', postsRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/challenges', challengesRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/reminders', remindersRouter);
+app.use('/api/pomodoro', pomodoroRouter);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

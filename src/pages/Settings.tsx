@@ -6,6 +6,7 @@ import { useToast } from '../hooks/useToast';
 import { Toast } from '../components/ui/Toast';
 import { api } from '../services/api';
 import { SettingsIcon, LockIcon, EyeIcon, CheckIcon, FlameIcon, ChatIcon, UserIcon, SendIcon } from '../components/icons';
+import { useUtility } from '../contexts/UtilityContext';
 
 export const Settings = () => {
     const { user, token, logout } = useAuth();
@@ -28,6 +29,13 @@ export const Settings = () => {
     const [profileVisibility, setProfileVisibility] = useState<'public' | 'friends' | 'private'>('public');
     const [showStreak, setShowStreak] = useState(true);
     const [showActivity, setShowActivity] = useState(true);
+    const [activeUtility, setActiveUtility] = useState<'reminder' | 'pomodoro' | 'lofi'>('reminder');
+    const [reminders, setReminders] = useState<any[]>([]);
+    const [newReminderTitle, setNewReminderTitle] = useState('');
+    const [newReminderNote, setNewReminderNote] = useState('');
+    const [newReminderTime, setNewReminderTime] = useState('');
+    const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
+    const { settings, state, start, pause, reset, skip, updateSettings, lofiUrl, setLofiUrl, isLofiPlaying, toggleLofi } = useUtility();
 
     useEffect(() => {
         if (!token || !user) {
@@ -59,6 +67,51 @@ export const Settings = () => {
 
         loadSettings();
     }, [token, user, navigate]);
+
+    useEffect(() => {
+        if (!token) return;
+        api.getReminders(token)
+            .then((data: any) => setReminders(data))
+            .catch(() => showToast('Failed to load reminders', 'error'));
+    }, [token]);
+
+    const handleCreateReminder = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || !newReminderTitle.trim()) return;
+        try {
+            const reminder: any = await api.createReminder(token, {
+                title: newReminderTitle,
+                note: newReminderNote || undefined,
+                remindAt: newReminderTime ? new Date(newReminderTime).toISOString() : null,
+            });
+            setReminders(prev => [reminder, ...prev]);
+            setNewReminderTitle('');
+            setNewReminderNote('');
+            setNewReminderTime('');
+        } catch (error) {
+            showToast('Failed to create reminder', 'error');
+        }
+    };
+
+    const handleUpdateReminder = async (id: string, data: any) => {
+        if (!token) return;
+        try {
+            const updated: any = await api.updateReminder(token, id, data);
+            setReminders(prev => prev.map(r => r.id === id ? updated : r));
+        } catch (error) {
+            showToast('Failed to update reminder', 'error');
+        }
+    };
+
+    const handleDeleteReminder = async (id: string) => {
+        if (!token) return;
+        try {
+            await api.deleteReminder(token, id);
+            setReminders(prev => prev.filter(r => r.id !== id));
+        } catch (error) {
+            showToast('Failed to delete reminder', 'error');
+        }
+    };
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -371,6 +424,261 @@ export const Settings = () => {
                         >
                             Delete Account
                         </button>
+                    </motion.div>
+
+                    {/* Utility */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="card-surface p-6"
+                    >
+                        <h2 className="text-xl font-bold text-text-primary mb-4">Utility</h2>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
+                            <button
+                                onClick={() => setActiveUtility('reminder')}
+                                className={`px-4 py-3 rounded-xl font-semibold text-sm transition-colors ${activeUtility === 'reminder' ? 'bg-accent-yellow text-bg-primary' : 'bg-surface-highlight text-text-secondary'}`}
+                            >
+                                Reminder
+                            </button>
+                            <button
+                                onClick={() => setActiveUtility('pomodoro')}
+                                className={`px-4 py-3 rounded-xl font-semibold text-sm transition-colors ${activeUtility === 'pomodoro' ? 'bg-accent-yellow text-bg-primary' : 'bg-surface-highlight text-text-secondary'}`}
+                            >
+                                Pomodoro
+                            </button>
+                            <button
+                                onClick={() => setActiveUtility('lofi')}
+                                className={`px-4 py-3 rounded-xl font-semibold text-sm transition-colors ${activeUtility === 'lofi' ? 'bg-accent-yellow text-bg-primary' : 'bg-surface-highlight text-text-secondary'}`}
+                            >
+                                Lofi Music
+                            </button>
+                        </div>
+
+                        {activeUtility === 'reminder' && (
+                            <div className="space-y-4">
+                                <form onSubmit={handleCreateReminder} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <input
+                                        type="text"
+                                        value={newReminderTitle}
+                                        onChange={(e) => setNewReminderTitle(e.target.value)}
+                                        placeholder="Reminder title"
+                                        className="bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-yellow"
+                                        required
+                                    />
+                                    <input
+                                        type="datetime-local"
+                                        value={newReminderTime}
+                                        onChange={(e) => setNewReminderTime(e.target.value)}
+                                        className="bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-yellow"
+                                    />
+                                    <button type="submit" className="btn-primary text-sm">
+                                        Add
+                                    </button>
+                                    <textarea
+                                        value={newReminderNote}
+                                        onChange={(e) => setNewReminderNote(e.target.value)}
+                                        placeholder="Notes (optional)"
+                                        className="md:col-span-3 bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-yellow resize-none"
+                                        rows={2}
+                                    />
+                                </form>
+
+                                <div className="space-y-3">
+                                    {reminders.length === 0 && (
+                                        <p className="text-sm text-text-secondary">No reminders yet.</p>
+                                    )}
+                                    {reminders.map((r) => (
+                                        <div key={r.id} className="p-4 rounded-xl border border-border bg-surface-highlight flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!r.isDone}
+                                                        onChange={() => handleUpdateReminder(r.id, { isDone: !r.isDone })}
+                                                    />
+                                                    <span className={`font-semibold ${r.isDone ? 'line-through text-text-tertiary' : 'text-text-primary'}`}>{r.title}</span>
+                                                </div>
+                                                {r.note && <p className="text-xs text-text-secondary mt-1">{r.note}</p>}
+                                                {r.remindAt && (
+                                                    <p className="text-[10px] text-text-tertiary mt-1">
+                                                        {new Date(r.remindAt).toLocaleString()}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingReminderId(r.id);
+                                                        setNewReminderTitle(r.title);
+                                                        setNewReminderNote(r.note || '');
+                                                        setNewReminderTime(r.remindAt ? new Date(r.remindAt).toISOString().slice(0, 16) : '');
+                                                    }}
+                                                    className="px-3 py-2 text-xs rounded-lg bg-surface text-text-secondary"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteReminder(r.id)}
+                                                    className="px-3 py-2 text-xs rounded-lg bg-red-500 text-white"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {editingReminderId && (
+                                    <div className="p-4 border border-border rounded-xl bg-surface">
+                                        <div className="text-sm font-semibold mb-2">Edit Reminder</div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <input
+                                                type="text"
+                                                value={newReminderTitle}
+                                                onChange={(e) => setNewReminderTitle(e.target.value)}
+                                                className="bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm"
+                                            />
+                                            <input
+                                                type="datetime-local"
+                                                value={newReminderTime}
+                                                onChange={(e) => setNewReminderTime(e.target.value)}
+                                                className="bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    handleUpdateReminder(editingReminderId, {
+                                                        title: newReminderTitle,
+                                                        note: newReminderNote || null,
+                                                        remindAt: newReminderTime ? new Date(newReminderTime).toISOString() : null,
+                                                    });
+                                                    setEditingReminderId(null);
+                                                    setNewReminderTitle('');
+                                                    setNewReminderNote('');
+                                                    setNewReminderTime('');
+                                                }}
+                                                className="btn-primary text-sm"
+                                            >
+                                                Save
+                                            </button>
+                                            <textarea
+                                                value={newReminderNote}
+                                                onChange={(e) => setNewReminderNote(e.target.value)}
+                                                className="md:col-span-3 bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm resize-none"
+                                                rows={2}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeUtility === 'pomodoro' && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-xs text-text-tertiary uppercase tracking-wider">Mode</p>
+                                        <p className="text-lg font-semibold">{state.mode.replace('_', ' ')}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-text-tertiary uppercase tracking-wider">Cycle</p>
+                                        <p className="text-lg font-semibold">{state.cycleCount}</p>
+                                    </div>
+                                </div>
+                                <div className="text-4xl font-bold text-text-primary">
+                                    {String(Math.floor(state.remainingMs / 60000)).padStart(2, '0')}:
+                                    {String(Math.floor((state.remainingMs % 60000) / 1000)).padStart(2, '0')}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <button onClick={start} className="btn-primary">Start</button>
+                                    <button onClick={pause} className="btn-secondary">Pause</button>
+                                    <button onClick={reset} className="btn-secondary">Reset</button>
+                                    <button onClick={skip} className="btn-secondary">Skip</button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                                    <div>
+                                        <label className="text-xs text-text-tertiary">Focus Minutes</label>
+                                        <input
+                                            type="number"
+                                            min={5}
+                                            value={settings.focusMinutes}
+                                            onChange={(e) => updateSettings({ focusMinutes: Number(e.target.value) })}
+                                            className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-text-tertiary">Short Break</label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={settings.shortBreakMinutes}
+                                            onChange={(e) => updateSettings({ shortBreakMinutes: Number(e.target.value) })}
+                                            className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-text-tertiary">Long Break</label>
+                                        <input
+                                            type="number"
+                                            min={5}
+                                            value={settings.longBreakMinutes}
+                                            onChange={(e) => updateSettings({ longBreakMinutes: Number(e.target.value) })}
+                                            className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-text-tertiary">Cycles Before Long</label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={settings.cyclesBeforeLong}
+                                            onChange={(e) => updateSettings({ cyclesBeforeLong: Number(e.target.value) })}
+                                            className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                                    <label className="flex items-center gap-2 text-sm text-text-secondary">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.autoStartBreaks}
+                                            onChange={(e) => updateSettings({ autoStartBreaks: e.target.checked })}
+                                        />
+                                        Auto‑start breaks
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm text-text-secondary">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.autoStartFocus}
+                                            onChange={(e) => updateSettings({ autoStartFocus: e.target.checked })}
+                                        />
+                                        Auto‑start focus
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeUtility === 'lofi' && (
+                            <div className="space-y-3">
+                                <p className="text-sm text-text-secondary">
+                                    For continuous playback across pages, use a direct stream URL (mp3/ogg). Embedded players usually stop when you navigate.
+                                </p>
+                                <input
+                                    type="text"
+                                    value={lofiUrl}
+                                    onChange={(e) => setLofiUrl(e.target.value)}
+                                    placeholder="https://your-stream-url.mp3"
+                                    className="w-full bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm"
+                                />
+                                <div className="flex gap-2">
+                                    <button onClick={toggleLofi} className="btn-primary">
+                                        {isLofiPlaying ? 'Pause' : 'Play'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             </div>

@@ -864,7 +864,7 @@ const Dashboard = () => {
             <nav className="sticky top-0 z-[70] bg-surface/80 backdrop-blur-md border-b border-border md:static">
                 <div className="relative max-w-[1400px] mx-auto px-3 sm:px-6 py-2 sm:py-4 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                        <div className="font-space text-lg sm:text-xl font-bold text-text-primary">HabitSync</div>
+                        <div className="font-space text-lg sm:text-xl font-bold text-text-primary">HabitHive</div>
                         <div className="hidden sm:block h-6 w-px bg-border" />
                         <span className="hidden sm:inline text-text-secondary text-sm truncate">Welcome back, {user?.name}!</span>
                     </div>
@@ -885,13 +885,21 @@ const Dashboard = () => {
                         </motion.button>
 
                         <motion.button
-                            className="btn-secondary flex items-center gap-2 px-3 sm:px-4"
+                            className="btn-secondary hidden sm:flex items-center gap-2 px-3 sm:px-4"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLogout}
                         >
-                            <span className="hidden sm:inline">Log out</span>
-                            <ArrowRightIcon size={16} />
+                            <span>Log out</span>
+                        </motion.button>
+                        <motion.button
+                            className="btn-secondary sm:hidden flex items-center gap-2 px-3"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/settings')}
+                        >
+                            <SettingsIcon size={18} />
+                            <span>Settings</span>
                         </motion.button>
                     </div>
                     {/* Notifications Dropdown */}
@@ -939,7 +947,7 @@ const Dashboard = () => {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-xs text-text-primary">
-                                                                <span className="font-bold">{n.sender?.name || 'HabitSync'}</span> {n.content}
+                                                                <span className="font-bold">{n.sender?.name || 'HabitHive'}</span> {n.content}
                                                             </p>
                                                             <p className="text-[10px] text-text-tertiary">
                                                                 {new Date(n.createdAt).toLocaleDateString()}

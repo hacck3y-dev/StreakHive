@@ -378,6 +378,79 @@ class ApiService {
         return this.handleResponse(response);
     }
 
+    // Reminders
+    async getReminders(token: string) {
+        const response = await fetch(`${API_URL}/reminders`, {
+            headers: this.getHeaders(token),
+        });
+        return this.handleResponse(response);
+    }
+
+    async createReminder(token: string, data: { title: string; note?: string; remindAt?: string | null }) {
+        const response = await fetch(`${API_URL}/reminders`, {
+            method: 'POST',
+            headers: this.getHeaders(token),
+            body: JSON.stringify(data),
+        });
+        return this.handleResponse(response);
+    }
+
+    async updateReminder(token: string, id: string, data: { title?: string; note?: string; remindAt?: string | null; isDone?: boolean }) {
+        const response = await fetch(`${API_URL}/reminders/${id}`, {
+            method: 'PUT',
+            headers: this.getHeaders(token),
+            body: JSON.stringify(data),
+        });
+        return this.handleResponse(response);
+    }
+
+    async deleteReminder(token: string, id: string) {
+        const response = await fetch(`${API_URL}/reminders/${id}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(token),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Pomodoro
+    async getPomodoroSettings(token: string) {
+        const response = await fetch(`${API_URL}/pomodoro/settings`, {
+            headers: this.getHeaders(token),
+        });
+        return this.handleResponse(response);
+    }
+
+    async updatePomodoroSettings(token: string, data: {
+        focusMinutes?: number;
+        shortBreakMinutes?: number;
+        longBreakMinutes?: number;
+        cyclesBeforeLong?: number;
+        autoStartBreaks?: boolean;
+        autoStartFocus?: boolean;
+    }) {
+        const response = await fetch(`${API_URL}/pomodoro/settings`, {
+            method: 'PUT',
+            headers: this.getHeaders(token),
+            body: JSON.stringify(data),
+        });
+        return this.handleResponse(response);
+    }
+
+    async createPomodoroSession(token: string, data: {
+        type: string;
+        plannedMinutes: number;
+        startedAt?: string;
+        endedAt?: string | null;
+        completed?: boolean;
+    }) {
+        const response = await fetch(`${API_URL}/pomodoro/sessions`, {
+            method: 'POST',
+            headers: this.getHeaders(token),
+            body: JSON.stringify(data),
+        });
+        return this.handleResponse(response);
+    }
+
     // Blocks
     async blockUser(token: string, userId: string) {
         const response = await fetch(`${API_URL}/friends/block`, {
