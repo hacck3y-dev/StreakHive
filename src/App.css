@@ -1,0 +1,82 @@
+/* App-specific styles */
+
+/* Smooth scrolling disabled for GSAP control */
+html {
+  scroll-behavior: auto;
+}
+
+/* Grid columns for heatmap */
+.grid-cols-53 {
+  grid-template-columns: repeat(53, minmax(0, 1fr));
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141821;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3142;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a4156;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(242, 201, 76, 0.3);
+  color: #F4F6F8;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid #F2C94C;
+  outline-offset: 2px;
+}
+
+/* Button hover transitions */
+button {
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Card hover effect */
+.card-surface {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-surface:hover {
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Image hover zoom */
+img {
+  transition: transform 0.5s ease;
+}
+
+/* Responsive typography adjustments */
+@media (max-width: 768px) {
+  .card-surface {
+    border-radius: 22px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
