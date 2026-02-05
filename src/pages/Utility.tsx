@@ -20,6 +20,15 @@ export const Utility = () => {
     const [newReminderTime, setNewReminderTime] = useState('');
     const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
     const { settings, state, start, pause, reset, skip, updateSettings, lofiUrl, setLofiUrl, isLofiPlaying, toggleLofi } = useUtility();
+    const getModeDurationMs = (mode: string) => {
+        if (mode === 'FOCUS') return settings.focusMinutes * 60 * 1000;
+        if (mode === 'SHORT_BREAK') return settings.shortBreakMinutes * 60 * 1000;
+        return settings.longBreakMinutes * 60 * 1000;
+    };
+    const totalMs = getModeDurationMs(state.mode);
+    const progress = totalMs > 0 ? Math.min(1, Math.max(0, 1 - state.remainingMs / totalMs)) : 0;
+    const minutes = String(Math.floor(state.remainingMs / 60000)).padStart(2, '0');
+    const seconds = String(Math.floor((state.remainingMs % 60000) / 1000)).padStart(2, '0');
 
     useEffect(() => {
         if (!token || !user) {
@@ -244,100 +253,117 @@ export const Utility = () => {
                     )}
 
                     {activeUtility === 'pomodoro' && (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-xs text-text-tertiary uppercase tracking-wider">Mode</p>
-                                    <p className="text-lg font-semibold">{state.mode.replace('_', ' ')}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-text-tertiary uppercase tracking-wider">Cycle</p>
-                                    <p className="text-lg font-semibold">{state.cycleCount}</p>
-                                </div>
-                            </div>
-                            <div className="text-4xl font-bold text-text-primary">
-                                {String(Math.floor(state.remainingMs / 60000)).padStart(2, '0')}:
-                                {String(Math.floor((state.remainingMs % 60000) / 1000)).padStart(2, '0')}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <button onClick={start} className="btn-primary">Start</button>
-                                <button onClick={pause} className="btn-secondary">Pause</button>
-                                <button onClick={reset} className="btn-secondary">Reset</button>
-                                <button onClick={skip} className="btn-secondary">Skip</button>
-                            </div>
+    <div className="space-y-5">
+        <div className="flex items-center justify-between">
+            <div>
+                <p className="text-[10px] uppercase tracking-widest text-text-tertiary">Track your focus time</p>
+                <p className="text-sm text-text-secondary">Mode: {state.mode.replace('_', ' ')}</p>
+            </div>
+            <div className="text-xs text-text-tertiary">Cycle {state.cycleCount}</div>
+        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-                                <div>
-                                    <label className="text-xs text-text-tertiary">Focus Minutes</label>
-                                    <input
-                                        type="number"
-                                        min={5}
-                                        value={settings.focusMinutes}
-                                        onChange={(e) => updateSettings({ focusMinutes: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-tertiary">Short Break</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        value={settings.shortBreakMinutes}
-                                        onChange={(e) => updateSettings({ shortBreakMinutes: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-tertiary">Long Break</label>
-                                    <input
-                                        type="number"
-                                        min={5}
-                                        value={settings.longBreakMinutes}
-                                        onChange={(e) => updateSettings({ longBreakMinutes: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-tertiary">Cycles Before Long</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        value={settings.cyclesBeforeLong}
-                                        onChange={(e) => updateSettings({ cyclesBeforeLong: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                                <label className="flex items-center gap-2 text-sm text-text-secondary">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.autoStartBreaks}
-                                        onChange={(e) => updateSettings({ autoStartBreaks: e.target.checked })}
-                                    />
-                                    Auto‑start breaks
-                                </label>
-                                <label className="flex items-center gap-2 text-sm text-text-secondary">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.autoStartFocus}
-                                        onChange={(e) => updateSettings({ autoStartFocus: e.target.checked })}
-                                    />
-                                    Auto‑start focus
-                                </label>
-                            </div>
-                        </div>
-                    )}
+        <div className="flex items-center justify-center">
+            <div
+                className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-full flex items-center justify-center"
+                style={{
+                    background: `conic-gradient(#c9b4ff ${progress * 360}deg, #e9e7f2 0deg)`,
+                }}
+            >
+                <div className="absolute inset-3 rounded-full bg-surface flex flex-col items-center justify-center text-text-primary">
+                    <div className="text-3xl sm:text-4xl font-bold">{minutes}:{seconds}</div>
+                    <div className="text-xs text-text-secondary">just focus</div>
+                </div>
+            </div>
+        </div>
 
-                    {activeUtility === 'lofi' && (
-                            <div className="space-y-3">
-                                <p className="text-sm text-text-secondary">
-                                    For continuous playback across pages, use a direct stream URL (mp3/ogg). Embedded players usually stop when you navigate.
-                                </p>
-                                <input
-                                    type="text"
-                                    value={lofiUrl}
-                                    onChange={(e) => setLofiUrl(e.target.value)}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-2">
+            <button onClick={start} className="px-4 py-2 rounded-xl bg-surface-highlight text-text-primary text-sm">Play</button>
+            <button onClick={pause} className="px-4 py-2 rounded-xl bg-surface-highlight text-text-primary text-sm">Pause</button>
+            <button onClick={reset} className="px-4 py-2 rounded-xl bg-surface-highlight text-text-primary text-sm">Reset</button>
+            <button onClick={skip} className="px-4 py-2 rounded-xl bg-surface-highlight text-text-primary text-sm">Skip</button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t border-border">
+            <div>
+                <label className="text-xs text-text-tertiary">Focus Minutes</label>
+                <input
+                    type="number"
+                    min={5}
+                    value={settings.focusMinutes}
+                    onChange={(e) => updateSettings({ focusMinutes: Number(e.target.value) })}
+                    className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                />
+            </div>
+            <div>
+                <label className="text-xs text-text-tertiary">Short Break</label>
+                <input
+                    type="number"
+                    min={1}
+                    value={settings.shortBreakMinutes}
+                    onChange={(e) => updateSettings({ shortBreakMinutes: Number(e.target.value) })}
+                    className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                />
+            </div>
+            <div>
+                <label className="text-xs text-text-tertiary">Long Break</label>
+                <input
+                    type="number"
+                    min={5}
+                    value={settings.longBreakMinutes}
+                    onChange={(e) => updateSettings({ longBreakMinutes: Number(e.target.value) })}
+                    className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                />
+            </div>
+            <div>
+                <label className="text-xs text-text-tertiary">Cycles Before Long</label>
+                <input
+                    type="number"
+                    min={1}
+                    value={settings.cyclesBeforeLong}
+                    onChange={(e) => updateSettings({ cyclesBeforeLong: Number(e.target.value) })}
+                    className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                />
+            </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+                <input
+                    type="checkbox"
+                    checked={settings.autoStartBreaks}
+                    onChange={(e) => updateSettings({ autoStartBreaks: e.target.checked })}
+                />
+                Auto-start breaks
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+                <input
+                    type="checkbox"
+                    checked={settings.autoStartFocus}
+                    onChange={(e) => updateSettings({ autoStartFocus: e.target.checked })}
+                />
+                Auto-start focus
+            </label>
+        </div>
+    </div>
+)}
+{activeUtility === 'lofi' && (
+    <div className="space-y-3">
+        <p className="text-sm text-text-secondary">
+            For continuous playback across pages, use a direct stream URL (mp3/ogg). Embedded players usually stop when you navigate.
+        </p>
+        <input
+            type="text"
+            value={lofiUrl}
+            onChange={(e) => setLofiUrl(e.target.value)}
+            placeholder="https://your-stream-url.mp3"
+            className="w-full bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+        />
+        <div className="flex gap-2">
+            <button onClick={toggleLofi} className="btn-primary">
+                {isLofiPlaying ? 'Pause' : 'Play'}
+            </button>
+        </div>
+    </div>
+)}
                                     placeholder="https://your-stream-url.mp3"
                                     className="w-full bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
                                 />
@@ -402,3 +428,6 @@ export const Utility = () => {
 };
 
 export default Utility;
+
+
+
