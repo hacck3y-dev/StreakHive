@@ -884,6 +884,14 @@ const Dashboard = () => {
                             )}
                         </motion.button>
 
+                        <button
+                            onClick={() => navigate('/profile')}
+                            className="w-9 h-9 rounded-full bg-accent-yellow/20 text-accent-yellow flex items-center justify-center overflow-hidden border border-accent-yellow/30"
+                            aria-label="View profile"
+                        >
+                            <span className="font-bold text-xs">{user?.name?.[0] || 'U'}</span>
+                        </button>
+
                         <motion.button
                             className="btn-secondary hidden sm:flex items-center gap-2 px-3 sm:px-4"
                             whileHover={{ scale: 1.05 }}
@@ -1070,6 +1078,16 @@ const Dashboard = () => {
                                 <div className="flex items-center gap-3">
                                     <ChatIcon size={20} />
                                     <span className="font-medium">Messages</span>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/utility')}
+                                className="w-full text-left px-4 py-3 rounded-xl text-text-secondary hover:bg-surface-highlight transition-all"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <SettingsIcon size={20} />
+                                    <span className="font-medium">Utility</span>
                                 </div>
                             </button>
 
@@ -1921,11 +1939,11 @@ const Dashboard = () => {
                         </button>
 
                         <button
-                            onClick={() => navigate('/settings')}
+                            onClick={() => navigate('/utility')}
                             className="flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] transition-colors bg-surface-highlight/60 text-text-secondary"
                         >
                             <SettingsIcon size={18} />
-                            Settings
+                            Utility
                         </button>
                     </div>
                 </div>
@@ -2177,14 +2195,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             </Modal>
-
-            {/* Utility Floating Button */}
-            <button
-                onClick={() => navigate('/utility')}
-                className="fixed bottom-24 right-4 z-40 md:bottom-6 md:right-6 bg-accent-yellow text-bg-primary px-4 py-3 rounded-full shadow-xl font-semibold"
-            >
-                Utility
-            </button>
 
             {/* Chat Modal (if needed for full-screen chat) */}
         </div>

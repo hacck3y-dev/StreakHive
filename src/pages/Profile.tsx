@@ -333,11 +333,11 @@ export const Profile = () => {
                         </button>
 
                         <button
-                            onClick={() => navigate('/settings')}
-                            className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] transition-colors ${location.pathname === '/settings' ? 'bg-accent-yellow/20 text-accent-yellow' : 'bg-surface-highlight/60 text-text-secondary'}`}
+                            onClick={() => navigate('/utility')}
+                            className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] transition-colors ${location.pathname === '/utility' ? 'bg-accent-yellow/20 text-accent-yellow' : 'bg-surface-highlight/60 text-text-secondary'}`}
                         >
                             <SettingsIcon size={18} />
-                            Settings
+                            Utility
                         </button>
                     </div>
                 </div>

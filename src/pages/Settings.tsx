@@ -140,19 +140,10 @@ export const Settings = () => {
             <div className="relative z-10 max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6 mobile-safe-bottom pb-24 md:pb-12">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => navigate('/profile')}
-                            className="w-10 h-10 rounded-full bg-accent-yellow/20 text-accent-yellow flex items-center justify-center overflow-hidden border border-accent-yellow/30"
-                            aria-label="View profile"
-                        >
-                            <span className="font-bold text-sm">{user?.name?.[0] || 'U'}</span>
-                        </button>
-                        <h1 className="text-3xl font-space font-bold text-text-primary flex items-center gap-3">
-                            <SettingsIcon size={32} className="text-accent-yellow" />
-                            Settings
-                        </h1>
-                    </div>
+                    <h1 className="text-3xl font-space font-bold text-text-primary flex items-center gap-3">
+                        <SettingsIcon size={32} className="text-accent-yellow" />
+                        Settings
+                    </h1>
                     <button
                         onClick={() => navigate('/dashboard')}
                         className="btn-secondary hidden sm:inline-flex"
@@ -173,14 +164,14 @@ export const Settings = () => {
                                 <SettingsIcon size={20} className="text-accent-yellow" />
                                 Personal Information
                             </h2>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setIsEditingProfile(!isEditingProfile)}
-                                    className="text-sm font-semibold text-accent-yellow hover:text-accent-yellow/80 transition-colors"
-                                >
-                                    {isEditingProfile ? 'Cancel' : 'Edit'}
-                                </button>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsEditingProfile(!isEditingProfile)}
+                                className="text-sm font-semibold text-accent-yellow hover:text-accent-yellow/80 transition-colors"
+                            >
+                                {isEditingProfile ? 'Cancel' : 'Edit'}
+                            </button>
+                        </div>
                         </div>
 
                         <form onSubmit={handleSaveProfile} className="space-y-4">
@@ -417,11 +408,11 @@ export const Settings = () => {
                         </button>
 
                         <button
-                            onClick={() => navigate('/settings')}
-                            className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] transition-colors ${location.pathname === '/settings' ? 'bg-accent-yellow/20 text-accent-yellow' : 'bg-surface-highlight/60 text-text-secondary'}`}
+                            onClick={() => navigate('/utility')}
+                            className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] transition-colors ${location.pathname === '/utility' ? 'bg-accent-yellow/20 text-accent-yellow' : 'bg-surface-highlight/60 text-text-secondary'}`}
                         >
                             <SettingsIcon size={18} />
-                            Settings
+                            Utility
                         </button>
                     </div>
                 </div>
