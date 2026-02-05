@@ -80,9 +80,9 @@ export const Utility = () => {
                 onClose={hideToast}
             />
 
-            <div className="relative z-10 max-w-4xl mx-auto py-6 sm:py-12 px-3 sm:px-6 mobile-safe-bottom pb-24 md:pb-12">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-5 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-space font-bold text-text-primary flex items-center gap-3">
+            <div className="relative z-10 max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6 mobile-safe-bottom pb-24 md:pb-12">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+                    <h1 className="text-3xl font-space font-bold text-text-primary flex items-center gap-3">
                         Utility
                     </h1>
                     <button
@@ -96,29 +96,29 @@ export const Utility = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="card-surface p-4 sm:p-6"
+                    className="card-surface p-6"
                 >
-                    <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center justify-between gap-4 mb-5">
                         <div>
                             <p className="text-xs uppercase tracking-wider text-text-tertiary">Workspace</p>
                             <h2 className="text-lg font-semibold text-text-primary">Utilities</h2>
                         </div>
-                        <div className="flex flex-col sm:flex-row bg-surface-highlight/80 border border-border rounded-2xl sm:rounded-full p-1 gap-1 sm:gap-0 w-32 sm:w-auto">
+                        <div className="inline-flex bg-surface-highlight/80 border border-border rounded-full p-1">
                             <button
                                 onClick={() => setActiveUtility('reminder')}
-                                className={`px-3 py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-colors ${activeUtility === 'reminder' ? 'bg-accent-yellow text-bg-primary' : 'text-text-secondary hover:text-text-primary'}`}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${activeUtility === 'reminder' ? 'bg-accent-yellow text-bg-primary' : 'text-text-secondary hover:text-text-primary'}`}
                             >
                                 Reminder
                             </button>
                             <button
                                 onClick={() => setActiveUtility('pomodoro')}
-                                className={`px-3 py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-colors ${activeUtility === 'pomodoro' ? 'bg-accent-yellow text-bg-primary' : 'text-text-secondary hover:text-text-primary'}`}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${activeUtility === 'pomodoro' ? 'bg-accent-yellow text-bg-primary' : 'text-text-secondary hover:text-text-primary'}`}
                             >
                                 Pomodoro
                             </button>
                             <button
                                 onClick={() => setActiveUtility('lofi')}
-                                className={`px-3 py-1.5 rounded-xl sm:rounded-full text-xs font-semibold transition-colors ${activeUtility === 'lofi' ? 'bg-accent-yellow text-bg-primary' : 'text-text-secondary hover:text-text-primary'}`}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${activeUtility === 'lofi' ? 'bg-accent-yellow text-bg-primary' : 'text-text-secondary hover:text-text-primary'}`}
                             >
                                 Lofi
                             </button>
@@ -126,7 +126,7 @@ export const Utility = () => {
                     </div>
 
                     {activeUtility === 'reminder' && (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             <form onSubmit={handleCreateReminder} className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                 <input
                                     type="text"
@@ -142,7 +142,7 @@ export const Utility = () => {
                                     onChange={(e) => setNewReminderTime(e.target.value)}
                                     className="bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-yellow"
                                 />
-                                <button type="submit" className="btn-primary text-sm w-full">
+                                <button type="submit" className="btn-primary text-sm">
                                     Add
                                 </button>
                                 <textarea
@@ -255,18 +255,18 @@ export const Utility = () => {
                                     <p className="text-lg font-semibold">{state.cycleCount}</p>
                                 </div>
                             </div>
-                            <div className="text-3xl sm:text-4xl font-bold text-text-primary">
+                            <div className="text-4xl font-bold text-text-primary">
                                 {String(Math.floor(state.remainingMs / 60000)).padStart(2, '0')}:
                                 {String(Math.floor((state.remainingMs % 60000) / 1000)).padStart(2, '0')}
                             </div>
-                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2">
                                 <button onClick={start} className="btn-primary">Start</button>
                                 <button onClick={pause} className="btn-secondary">Pause</button>
                                 <button onClick={reset} className="btn-secondary">Reset</button>
                                 <button onClick={skip} className="btn-secondary">Skip</button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t border-border">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
                                 <div>
                                     <label className="text-xs text-text-tertiary">Focus Minutes</label>
                                     <input
@@ -274,7 +274,7 @@ export const Utility = () => {
                                         min={5}
                                         value={settings.focusMinutes}
                                         onChange={(e) => updateSettings({ focusMinutes: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -284,7 +284,7 @@ export const Utility = () => {
                                         min={1}
                                         value={settings.shortBreakMinutes}
                                         onChange={(e) => updateSettings({ shortBreakMinutes: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -294,7 +294,7 @@ export const Utility = () => {
                                         min={5}
                                         value={settings.longBreakMinutes}
                                         onChange={(e) => updateSettings({ longBreakMinutes: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -304,7 +304,7 @@ export const Utility = () => {
                                         min={1}
                                         value={settings.cyclesBeforeLong}
                                         onChange={(e) => updateSettings({ cyclesBeforeLong: Number(e.target.value) })}
-                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                                        className="w-full mt-1 bg-surface-highlight border border-border rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
                             </div>
@@ -330,17 +330,17 @@ export const Utility = () => {
                     )}
 
                     {activeUtility === 'lofi' && (
-                        <div className="space-y-3">
-                            <p className="text-sm text-text-secondary">
-                                For continuous playback across pages, use a direct stream URL (mp3/ogg). Embedded players usually stop when you navigate.
-                            </p>
-                            <input
-                                type="text"
-                                value={lofiUrl}
-                                onChange={(e) => setLofiUrl(e.target.value)}
-                                placeholder="https://your-stream-url.mp3"
-                                className="w-full bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
-                            />
+                            <div className="space-y-3">
+                                <p className="text-sm text-text-secondary">
+                                    For continuous playback across pages, use a direct stream URL (mp3/ogg). Embedded players usually stop when you navigate.
+                                </p>
+                                <input
+                                    type="text"
+                                    value={lofiUrl}
+                                    onChange={(e) => setLofiUrl(e.target.value)}
+                                    placeholder="https://your-stream-url.mp3"
+                                    className="w-full bg-surface-highlight border border-border rounded-lg px-3 py-2 text-sm"
+                                />
                             <div className="flex gap-2">
                                 <button onClick={toggleLofi} className="btn-primary">
                                     {isLofiPlaying ? 'Pause' : 'Play'}
