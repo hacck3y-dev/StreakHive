@@ -20,6 +20,16 @@ interface Message {
     roomId: string;
     senderId: string;
     content: string;
+    replyTo?: {
+        id: string;
+        content: string;
+        sender: {
+            id: string;
+            name: string;
+            username: string;
+            avatarUrl?: string;
+        };
+    };
     createdAt: string;
     sender: {
         id: string;
@@ -62,6 +72,7 @@ export const Chat = () => {
     const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
+    const [replyTo, setReplyTo] = useState<Message | null>(null);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,9 +83,12 @@ export const Chat = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [sidebarSearch, setSidebarSearch] = useState('');
+    const [blockedUsers, setBlockedUsers] = useState<Friend[]>([]);
+    const [showRoomMenu, setShowRoomMenu] = useState(false);
 
     const activeRoom = rooms.find(r => r.id === activeRoomId);
     const otherParticipant = activeRoom?.participants.find(p => p.userId !== user?.id)?.user;
+    const isBlocked = !!otherParticipant && blockedUsers.some(b => b.id === otherParticipant.id);
 
     useEffect(() => {
         if (!token) {
@@ -98,6 +112,11 @@ export const Chat = () => {
             } catch (error) {
                 console.error('Failed to load friends:', error);
                 // We don't necessarily want to toast here if it's just friends list failure
+            }
+
+            try {
+                const blockedData: any = await api.getBlockedUsers(token);
+                setBlockedUsers(blockedData);
             } finally {
                 setLoading(false);
             }
@@ -159,9 +178,10 @@ export const Chat = () => {
 
         setSending(true);
         try {
-            const created: any = await api.sendChatMessage(token, activeRoomId, newMessage);
+            const created: any = await api.sendChatMessageWithReply(token, activeRoomId, newMessage, replyTo?.id || null);
             setMessages(prev => [...prev, created]);
             setNewMessage('');
+            setReplyTo(null);
             scrollToBottom();
 
             // Update rooms list to show latest message/sort
@@ -176,8 +196,8 @@ export const Chat = () => {
                 api.getChatRooms(token!).then(data => setRooms(data as ChatRoom[]));
                 return prev;
             });
-        } catch (error) {
-            showToast('Failed to send message', 'error');
+        } catch (error: any) {
+            showToast(error.message || 'Failed to send message', 'error');
         } finally {
             setSending(false);
         }
@@ -379,7 +399,14 @@ export const Chat = () => {
                                 <button onClick={() => setActiveRoomId(null)} className="md:hidden p-2 hover:bg-surface-highlight rounded-xl">
                                     <ArrowLeftIcon size={20} />
                                 </button>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${activeRoom?.isGroup ? 'bg-accent-yellow text-bg-primary' : 'bg-accent-yellow/20 text-accent-yellow'}`}>
+                                <button
+                                    onClick={() => {
+                                        if (!activeRoom?.isGroup && otherParticipant?.id) {
+                                            navigate(`/profile?id=${otherParticipant.id}`);
+                                        }
+                                    }}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${activeRoom?.isGroup ? 'bg-accent-yellow text-bg-primary' : 'bg-accent-yellow/20 text-accent-yellow'}`}
+                                >
                                     {activeRoom?.isGroup ? (
                                         <UsersIcon size={20} />
                                     ) : otherParticipant?.avatarUrl ? (
@@ -387,19 +414,63 @@ export const Chat = () => {
                                     ) : (
                                         <span className="font-bold">{otherParticipant?.name?.[0] || '?'}</span>
                                     )}
-                                </div>
+                                </button>
                                 <div className="text-left">
-                                    <h3 className="font-bold text-text-primary text-sm">
+                                    <button
+                                        onClick={() => {
+                                            if (!activeRoom?.isGroup && otherParticipant?.id) {
+                                                navigate(`/profile?id=${otherParticipant.id}`);
+                                            }
+                                        }}
+                                        className="font-bold text-text-primary text-sm text-left"
+                                    >
                                         {activeRoom?.isGroup ? activeRoom.name : otherParticipant?.name}
-                                    </h3>
+                                    </button>
                                     <p className="text-[10px] text-text-secondary">
                                         {activeRoom?.isGroup ? `${activeRoom.participants.length} members` : `@${otherParticipant?.username}`}
                                     </p>
                                 </div>
                             </div>
-                            <button className="p-2 hover:bg-surface-highlight rounded-full">
-                                <MoreVerticalIcon size={20} />
-                            </button>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowRoomMenu(prev => !prev)}
+                                    className="p-2 hover:bg-surface-highlight rounded-full"
+                                >
+                                    <MoreVerticalIcon size={20} />
+                                </button>
+                                {showRoomMenu && activeRoom && !activeRoom.isGroup && otherParticipant && (
+                                    <div className="absolute right-0 mt-2 w-40 rounded-xl border border-border bg-surface shadow-xl z-30">
+                                        <button
+                                            onClick={() => {
+                                                navigate(`/profile?id=${otherParticipant.id}`);
+                                                setShowRoomMenu(false);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-surface-highlight"
+                                        >
+                                            View Profile
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    if (isBlocked) {
+                                                        await api.unblockUser(token!, otherParticipant.id);
+                                                        setBlockedUsers(prev => prev.filter(b => b.id !== otherParticipant.id));
+                                                    } else {
+                                                        await api.blockUser(token!, otherParticipant.id);
+                                                        setBlockedUsers(prev => [...prev, otherParticipant]);
+                                                    }
+                                                    setShowRoomMenu(false);
+                                                } catch (error: any) {
+                                                    showToast(error.message || 'Action failed', 'error');
+                                                }
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-surface-highlight"
+                                        >
+                                            {isBlocked ? 'Unblock' : 'Block'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </header>
 
                         {/* Messages Area */}
@@ -416,13 +487,16 @@ export const Chat = () => {
                                         className={`flex ${isMe ? 'justify-end' : 'justify-start'} items-end gap-2`}
                                     >
                                         {!isMe && showAvatar && (
-                                            <div className="w-8 h-8 rounded-full bg-accent-yellow/20 flex items-center justify-center overflow-hidden mb-1 flex-shrink-0">
+                                            <button
+                                                onClick={() => navigate(`/profile?id=${msg.sender.id}`)}
+                                                className="w-8 h-8 rounded-full bg-accent-yellow/20 flex items-center justify-center overflow-hidden mb-1 flex-shrink-0"
+                                            >
                                                 {msg.sender.avatarUrl ? (
                                                     <img src={api.getImageUrl(msg.sender.avatarUrl) || ''} alt="" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <span className="font-bold text-xs">{msg.sender.name[0]}</span>
                                                 )}
-                                            </div>
+                                            </button>
                                         )}
                                         {!isMe && !showAvatar && <div className="w-8" />}
 
@@ -432,8 +506,22 @@ export const Chat = () => {
                                                 : 'bg-surface-highlight text-text-primary rounded-bl-none border border-border'
                                                 }`}
                                         >
+                                            {msg.replyTo && (
+                                                <div className={`mb-2 p-2 rounded-lg text-[10px] ${isMe ? 'bg-bg-primary/20' : 'bg-bg-primary/10'} border border-border/50`}>
+                                                    <div className="font-semibold">
+                                                        {msg.replyTo.sender.name}
+                                                    </div>
+                                                    <div className="truncate">{msg.replyTo.content}</div>
+                                                </div>
+                                            )}
                                             <p className="leading-relaxed">{msg.content}</p>
-                                            <div className={`text-[9px] mt-1 ${isMe ? 'text-bg-primary/60' : 'text-text-tertiary'} text-right`}>
+                                            <div className={`text-[9px] mt-1 ${isMe ? 'text-bg-primary/60' : 'text-text-tertiary'} flex items-center justify-between`}>
+                                                <button
+                                                    onClick={() => setReplyTo(msg)}
+                                                    className={`${isMe ? 'text-bg-primary/70' : 'text-text-tertiary'} hover:underline`}
+                                                >
+                                                    Reply
+                                                </button>
                                                 {formatTime(msg.createdAt)}
                                             </div>
                                         </div>
@@ -445,6 +533,19 @@ export const Chat = () => {
 
                         {/* Input Area */}
                         <div className="p-6 border-t border-border bg-surface/30">
+                            {isBlocked && (
+                                <div className="mb-3 rounded-xl border border-border bg-surface-highlight px-4 py-2 text-xs text-text-secondary">
+                                    Messaging is disabled because this user is blocked.
+                                </div>
+                            )}
+                            {replyTo && (
+                                <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-highlight px-4 py-2 text-xs">
+                                    <div className="truncate">
+                                        Replying to <span className="font-semibold">{replyTo.sender.name}</span>: {replyTo.content}
+                                    </div>
+                                    <button onClick={() => setReplyTo(null)} className="text-text-tertiary hover:text-text-primary">✕</button>
+                                </div>
+                            )}
                             <form onSubmit={handleSendMessage} className="flex gap-4">
                                 <input
                                     type="text"
@@ -452,10 +553,11 @@ export const Chat = () => {
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder="Type a message..."
                                     className="flex-1 bg-surface-highlight border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent-yellow transition-all"
+                                    disabled={isBlocked}
                                 />
                                 <button
                                     type="submit"
-                                    disabled={!newMessage.trim() || sending}
+                                    disabled={!newMessage.trim() || sending || isBlocked}
                                     className="btn-primary flex items-center justify-center p-3 aspect-square rounded-xl"
                                 >
                                     <SendIcon size={20} />

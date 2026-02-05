@@ -31,6 +31,7 @@ interface Habit {
     id: string;
     name: string;
     category: string;
+    time?: string | null;
     streak: number;
     completedToday: boolean;
     isPrivate: boolean;
@@ -102,6 +103,7 @@ const Dashboard = () => {
 
     const [newHabitName, setNewHabitName] = useState('');
     const [newHabitCategory, setNewHabitCategory] = useState('');
+    const [newHabitTime, setNewHabitTime] = useState('');
     const [showAddHabit, setShowAddHabit] = useState(false);
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
     const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
@@ -295,6 +297,7 @@ const Dashboard = () => {
                     ...editingHabit,
                     name: newHabitName,
                     category: newHabitCategory,
+                    time: newHabitTime || null,
                     isPrivate: isPrivate
                 };
 
@@ -309,6 +312,7 @@ const Dashboard = () => {
                 const newHabit = {
                     name: newHabitName,
                     category: newHabitCategory,
+                    time: newHabitTime || null,
                     streak: 0,
                     completedToday: false,
                     isPrivate: isPrivate,
@@ -321,6 +325,7 @@ const Dashboard = () => {
 
             setNewHabitName('');
             setNewHabitCategory('');
+            setNewHabitTime('');
             setIsPrivate(false);
             setShowAddHabit(false);
         } catch (error) {
@@ -334,6 +339,7 @@ const Dashboard = () => {
         setEditingHabit(habit);
         setNewHabitName(habit.name);
         setNewHabitCategory(habit.category);
+        setNewHabitTime(habit.time || '');
         setIsPrivate(habit.isPrivate);
         setShowAddHabit(true);
     };
@@ -1199,6 +1205,15 @@ const Dashboard = () => {
                                                             required
                                                         />
                                                     </div>
+                                                    <div>
+                                                        <label className="block text-sm text-text-secondary mb-2">Time (optional)</label>
+                                                        <input
+                                                            type="time"
+                                                            value={newHabitTime}
+                                                            onChange={(e) => setNewHabitTime(e.target.value)}
+                                                            className="w-full bg-surface-highlight border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent-yellow transition-colors"
+                                                        />
+                                                    </div>
 
                                                     <div className="flex items-center justify-between p-4 bg-surface-highlight rounded-xl border border-border hover:border-accent-yellow/30 transition-all cursor-pointer" onClick={() => setIsPrivate(!isPrivate)}>
                                                         <div className="flex items-center gap-3">
@@ -1226,6 +1241,7 @@ const Dashboard = () => {
                                                                 setEditingHabit(null);
                                                                 setNewHabitName('');
                                                                 setNewHabitCategory('');
+                                                                setNewHabitTime('');
                                                                 setIsPrivate(false);
                                                             }}
                                                             className="btn-secondary flex-1"
@@ -1256,7 +1272,18 @@ const Dashboard = () => {
 
                                     {/* Habits List */}
                                     <div className="space-y-4">
-                                        {habits.filter(h => selectedCategory === 'All' || h.category === selectedCategory).map((habit) => (
+                                        {habits
+                                            .filter(h => selectedCategory === 'All' || h.category === selectedCategory)
+                                            .sort((a, b) => {
+                                                const toMinutes = (t?: string | null) => {
+                                                    if (!t) return Number.POSITIVE_INFINITY;
+                                                    const [hh, mm] = t.split(':').map(Number);
+                                                    if (Number.isNaN(hh) || Number.isNaN(mm)) return Number.POSITIVE_INFINITY;
+                                                    return hh * 60 + mm;
+                                                };
+                                                return toMinutes(a.time) - toMinutes(b.time);
+                                            })
+                                            .map((habit) => (
                                             <motion.div
                                                 key={habit.id}
                                                 className="card-surface p-6"
@@ -1290,8 +1317,13 @@ const Dashboard = () => {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div className="flex items-center gap-4 mt-1">
+                                                            <div className="flex items-center gap-4 mt-1 flex-wrap">
                                                                 <span className="text-sm text-text-secondary">{habit.category}</span>
+                                                                {habit.time && (
+                                                                    <span className="text-sm text-text-secondary">
+                                                                        {habit.time}
+                                                                    </span>
+                                                                )}
                                                                 <div className="flex items-center gap-1 text-accent-yellow">
                                                                     <FlameIcon size={16} />
                                                                     <span className="text-sm font-semibold">{habit.streak} days</span>

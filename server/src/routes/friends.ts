@@ -12,10 +12,21 @@ router.get('/search', authenticateToken, async (req: AuthRequest, res: express.R
     if (!username) return res.status(400).json({ error: 'Username query required' });
     const usernameStr = Array.isArray(username) ? String(username[0]) : String(username);
 
+    const blocked = await prisma.blockedUser.findMany({
+      where: { OR: [{ blockerId: req.user!.id }, { blockedId: req.user!.id }] },
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedIds = new Set(
+      blocked.map((b) => (b.blockerId === req.user!.id ? b.blockedId : b.blockerId))
+    );
+
     const users = await prisma.user.findMany({
       where: {
         username: { contains: usernameStr, mode: 'insensitive' },
-        id: { not: req.user!.id },
+        AND: [
+          { id: { not: req.user!.id } },
+          { id: { notIn: Array.from(blockedIds) } },
+        ],
       },
       select: { id: true, name: true, username: true, avatarUrl: true, profileVisibility: true },
       take: 10,
@@ -135,11 +146,72 @@ router.get('/list', authenticateToken, async (req: AuthRequest, res: express.Res
       },
     });
 
-    const friends = friendships.map((f: any) => (f.senderId === req.user!.id ? f.receiver : f.sender));
+    const blocked = await prisma.blockedUser.findMany({
+      where: { OR: [{ blockerId: req.user!.id }, { blockedId: req.user!.id }] },
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedIds = new Set(
+      blocked.map((b) => (b.blockerId === req.user!.id ? b.blockedId : b.blockerId))
+    );
+
+    const friends = friendships
+      .map((f: any) => (f.senderId === req.user!.id ? f.receiver : f.sender))
+      .filter((f: any) => !blockedIds.has(f.id));
     res.json(friends);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch friends' });
+  }
+});
+
+// Block a user
+router.post('/block', authenticateToken, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'User ID required' });
+    if (userId === req.user!.id) return res.status(400).json({ error: 'Cannot block yourself' });
+
+    await prisma.blockedUser.upsert({
+      where: { blockerId_blockedId: { blockerId: req.user!.id, blockedId: userId } },
+      create: { blockerId: req.user!.id, blockedId: userId },
+      update: {},
+    });
+
+    res.json({ message: 'User blocked' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to block user' });
+  }
+});
+
+// Unblock a user
+router.post('/unblock', authenticateToken, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'User ID required' });
+
+    await prisma.blockedUser.deleteMany({
+      where: { blockerId: req.user!.id, blockedId: userId },
+    });
+
+    res.json({ message: 'User unblocked' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to unblock user' });
+  }
+});
+
+// List blocked users
+router.get('/blocked', authenticateToken, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const blocked = await prisma.blockedUser.findMany({
+      where: { blockerId: req.user!.id },
+      include: { blocked: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+    });
+    res.json(blocked.map((b) => b.blocked));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch blocked users' });
   }
 });
 
@@ -148,6 +220,16 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: express.Resp
   try {
     const targetId = String(req.params.id);
     const myId = req.user!.id;
+
+    const blocked = await prisma.blockedUser.findFirst({
+      where: {
+        OR: [
+          { blockerId: myId, blockedId: targetId },
+          { blockerId: targetId, blockedId: myId },
+        ],
+      },
+    });
+    if (blocked) return res.status(403).json({ error: 'User is blocked' });
 
     const user = await prisma.user.findUnique({
       where: { id: targetId },

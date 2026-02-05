@@ -34,6 +34,8 @@ model User {
   // Notification relations
   notifications       Notification[]          @relation("ReceivedNotifications")
   triggeredNotifications Notification[]       @relation("TriggeredNotifications")
+  blocksSent          BlockedUser[]           @relation("Blocker")
+  blocksReceived      BlockedUser[]           @relation("Blocked")
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
 }
@@ -121,10 +123,27 @@ model Message {
   senderId  String
   sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
   content   String   @db.Text
+  replyToId String?
+  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies   Message[] @relation("MessageReplies")
   createdAt DateTime @default(now())
 
   @@index([roomId])
   @@index([senderId])
+  @@index([replyToId])
+}
+
+model BlockedUser {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }
 
 model Habit {
@@ -133,6 +152,7 @@ model Habit {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   category         String
+  time             String?
   streak           Int      @default(0)
   completedToday   Boolean  @default(false)
   isPrivate        Boolean  @default(false)

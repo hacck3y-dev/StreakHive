@@ -18,12 +18,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 // Create a new habit
 router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { name, category, isPrivate } = req.body;
+    const { name, category, isPrivate, time } = req.body;
     const habit = await prisma.habit.create({
       data: {
         userId: req.user!.id,
         name,
         category,
+        time: time || null,
         isPrivate: !!isPrivate,
         streak: 0,
         completedToday: false,
@@ -40,12 +41,13 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 // Update a habit
 router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { name, category, completedToday, streak, isPrivate, lastCompletedDate } = req.body;
+    const { name, category, completedToday, streak, isPrivate, lastCompletedDate, time } = req.body;
     const habit = await prisma.habit.update({
       where: { id: String(req.params.id) },
       data: {
         ...(name && { name }),
         ...(category && { category }),
+        ...(time !== undefined && { time: time || null }),
         ...(completedToday !== undefined && { completedToday }),
         ...(streak !== undefined && { streak }),
         ...(isPrivate !== undefined && { isPrivate }),

@@ -7,9 +7,73 @@ const router = express.Router();
 // List all challenges
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const challenges = await prisma.challenge.findMany({
+    let challenges = await prisma.challenge.findMany({
       include: { joinedUsers: { where: { userId: req.user!.id } } },
     });
+
+    if (challenges.length === 0) {
+      const seeds = [
+        {
+          name: '7-Day Hydration',
+          description: 'Drink enough water every day for a week.',
+          participants: 0,
+          duration: '7 days',
+        },
+        {
+          name: 'Morning Walk',
+          description: '10–20 minute walk every morning.',
+          participants: 0,
+          duration: '14 days',
+        },
+        {
+          name: 'No Sugar Week',
+          description: 'Avoid added sugar and track how you feel.',
+          participants: 0,
+          duration: '7 days',
+        },
+        {
+          name: 'Read 10 Pages',
+          description: 'Read at least 10 pages a day.',
+          participants: 0,
+          duration: '21 days',
+        },
+        {
+          name: 'Sleep On Time',
+          description: 'Go to bed before your target time each night.',
+          participants: 0,
+          duration: '14 days',
+        },
+      ];
+
+      for (const seed of seeds) {
+        const room = await prisma.chatRoom.create({
+          data: { isGroup: true, name: seed.name },
+        });
+        await prisma.challenge.create({
+          data: { ...seed, roomId: room.id },
+        });
+      }
+
+      challenges = await prisma.challenge.findMany({
+        include: { joinedUsers: { where: { userId: req.user!.id } } },
+      });
+    }
+
+    const missingRoom = challenges.filter((c) => !c.roomId);
+    if (missingRoom.length > 0) {
+      for (const c of missingRoom) {
+        const room = await prisma.chatRoom.create({
+          data: { isGroup: true, name: c.name },
+        });
+        await prisma.challenge.update({
+          where: { id: c.id },
+          data: { roomId: room.id },
+        });
+      }
+      challenges = await prisma.challenge.findMany({
+        include: { joinedUsers: { where: { userId: req.user!.id } } },
+      });
+    }
 
     const formatted = challenges.map((c) => ({
       id: c.id,

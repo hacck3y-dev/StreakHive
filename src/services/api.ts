@@ -321,6 +321,15 @@ class ApiService {
         return this.handleResponse(response);
     }
 
+    async sendChatMessageWithReply(token: string, roomId: string, content: string, replyToId?: string | null) {
+        const response = await fetch(`${API_URL}/chat/rooms/${roomId}/messages`, {
+            method: 'POST',
+            headers: this.getHeaders(token),
+            body: JSON.stringify({ content, replyToId }),
+        });
+        return this.handleResponse(response);
+    }
+
     // Challenges
     async getChallenges(token: string) {
         const response = await fetch(`${API_URL}/challenges`, {
@@ -364,6 +373,32 @@ class ApiService {
     async markAllNotificationsRead(token: string) {
         const response = await fetch(`${API_URL}/notifications/read-all`, {
             method: 'PUT',
+            headers: this.getHeaders(token),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Blocks
+    async blockUser(token: string, userId: string) {
+        const response = await fetch(`${API_URL}/friends/block`, {
+            method: 'POST',
+            headers: this.getHeaders(token),
+            body: JSON.stringify({ userId }),
+        });
+        return this.handleResponse(response);
+    }
+
+    async unblockUser(token: string, userId: string) {
+        const response = await fetch(`${API_URL}/friends/unblock`, {
+            method: 'POST',
+            headers: this.getHeaders(token),
+            body: JSON.stringify({ userId }),
+        });
+        return this.handleResponse(response);
+    }
+
+    async getBlockedUsers(token: string) {
+        const response = await fetch(`${API_URL}/friends/blocked`, {
             headers: this.getHeaders(token),
         });
         return this.handleResponse(response);

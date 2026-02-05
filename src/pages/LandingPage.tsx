@@ -31,7 +31,7 @@ const LandingPage = () => {
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     // TODO: replace with your GitHub repository URL
-    const githubRepoUrl = 'https://github.com/yourname/yourrepo';
+    const githubRepoUrl = 'https://github.com/hacck3y-dev/StreakHive';
 
     // Redirect to dashboard if already logged in
     useEffect(() => {
